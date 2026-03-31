@@ -97,11 +97,11 @@ resource "aws_cloudfront_distribution" "distribution" {
       min_ttl                = ordered_cache_behavior.value.min_ttl
       default_ttl            = ordered_cache_behavior.value.default_ttl
       max_ttl                = ordered_cache_behavior.value.max_ttl
-      compress               = lookup(ordered_cache_behavior.value, "compress", true)
+      compress               = coalesce(ordered_cache_behavior.value.compress, true)
 
       forwarded_values {
-        query_string = lookup(ordered_cache_behavior.value, "query_string", false)
-        headers      = lookup(ordered_cache_behavior.value, "headers", [])
+        query_string = coalesce(ordered_cache_behavior.value.query_string, false)
+        headers      = coalesce(ordered_cache_behavior.value.headers, [])
 
         cookies {
           forward = "none"
