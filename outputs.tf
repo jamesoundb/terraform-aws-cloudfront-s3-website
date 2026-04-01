@@ -42,3 +42,8 @@ output "website_url" {
   description = "Primary website URL"
   value       = "https://${var.domain_name}"
 }
+
+output "waf_web_acl_arn" {
+  description = "ARN of the WAF v2 Web ACL (null if WAF not enabled)"
+  value       = var.enable_waf_rate_limiting ? aws_wafv2_web_acl.rate_limit[0].arn : null
+}

@@ -58,6 +58,7 @@ resource "aws_cloudfront_distribution" "distribution" {
   default_root_object = var.default_root_object
   aliases             = var.aliases
   price_class         = var.price_class
+  web_acl_id          = var.enable_waf_rate_limiting ? aws_wafv2_web_acl.rate_limit[0].arn : null
 
   origin {
     domain_name = var.s3_bucket_regional_domain_name
@@ -153,4 +154,47 @@ resource "aws_route53_record" "www" {
     zone_id                = aws_cloudfront_distribution.distribution.hosted_zone_id
     evaluate_target_health = var.evaluate_target_health
   }
+}
+
+# WAF v2 Rate Limiting
+resource "aws_wafv2_web_acl" "rate_limit" {
+  count = var.enable_waf_rate_limiting ? 1 : 0
+
+  name        = "${replace(var.domain_name, ".", "-")}-rate-limit"
+  description = "Rate limiting for ${var.domain_name}"
+  scope       = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rate-limit"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = var.waf_rate_limit
+        aggregate_key_type = "IP"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${replace(var.domain_name, ".", "-")}-rate-limit"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${replace(var.domain_name, ".", "-")}-waf"
+    sampled_requests_enabled   = true
+  }
+
+  tags = var.tags
 }

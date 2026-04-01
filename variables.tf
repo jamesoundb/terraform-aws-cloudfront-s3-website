@@ -156,3 +156,15 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "enable_waf_rate_limiting" {
+  description = "Whether to create a WAF v2 Web ACL with rate limiting for CloudFront"
+  type        = bool
+  default     = false
+}
+
+variable "waf_rate_limit" {
+  description = "Maximum number of requests per 5-minute period per IP before WAF blocks"
+  type        = number
+  default     = 2000
+}
